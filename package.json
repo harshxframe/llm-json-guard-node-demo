@@ -1,0 +1,17 @@
+{
+  "name": "llm-json-guard-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "basic": "node examples/01-basic-sanitize.js",
+    "schema": "node examples/02-schema-validation.js",
+    "multi": "node examples/multiple-examples.js",
+    "server": "node examples/03-express-integration.js",
+    "benchmark": "node examples/04-benchmark.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.18.0",
+    "llm-json-guard": "^1.0.0"
+  }
+}
