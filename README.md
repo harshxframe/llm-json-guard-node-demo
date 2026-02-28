@@ -1,5 +1,3 @@
----
-
 # 🛡️ LLM JSON Guard
 
 **Production-safe JSON repair and schema validation for unreliable LLM outputs.**
