@@ -1,16 +1,11 @@
 import express from "express";
 import { LLMJsonGuard } from "llm-json-guard";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const guard = new LLMJsonGuard({
-  apiKey: process.env.RAPIDAPI_KEY
-});
+const guard = new LLMJsonGuard();
 
 /* ------------------------------
    Home Page
@@ -35,7 +30,6 @@ app.get("/", (req, res) => {
 
       <br/><br/>
       <button type="submit" name="mode" value="sanitize">Sanitize</button>
-      <button type="submit" name="mode" value="validate">Validate</button>
       <button type="submit" name="mode" value="guard">Guard</button>
     </form>
   `);
@@ -44,7 +38,7 @@ app.get("/", (req, res) => {
 /* ------------------------------
    PROCESS ROUTE
 --------------------------------*/
-app.post("/process", async (req, res, next) => {
+app.post("/process", (req, res, next) => {
   try {
     const { raw, schema, mode } = req.body;
 
@@ -55,15 +49,7 @@ app.post("/process", async (req, res, next) => {
     let result;
 
     if (mode === "sanitize") {
-      result = await guard.sanitize(raw);
-
-    } else if (mode === "validate") {
-      if (!schema) {
-        return res.send(`<h3>Schema required for validation</h3><a href="/">Back</a>`);
-      }
-
-      const parsedSchema = JSON.parse(schema);
-      result = await guard.guard(JSON.stringify(JSON.parse(raw)), parsedSchema);
+      result = guard.sanitize(raw);
 
     } else if (mode === "guard") {
       if (!schema) {
@@ -71,14 +57,14 @@ app.post("/process", async (req, res, next) => {
       }
 
       const parsedSchema = JSON.parse(schema);
-      result = await guard.guard(raw, parsedSchema);
+      result = guard.guard(raw, parsedSchema);
 
     } else {
       return res.send(`<h3>Invalid mode</h3><a href="/">Back</a>`);
     }
 
     res.send(`
-      <h2>Success</h2>
+      <h2>Result</h2>
       <pre>${JSON.stringify(result, null, 2)}</pre>
       <a href="/">Back</a>
     `);

@@ -1,12 +1,7 @@
-import dotenv from "dotenv";
 import { performance } from "node:perf_hooks";
 import { LLMJsonGuard } from "llm-json-guard";
 
-dotenv.config();
-
-const guard = new LLMJsonGuard({
-  apiKey: process.env.RAPIDAPI_KEY
-});
+const guard = new LLMJsonGuard();
 
 const testCases = [
   "{name: 'John', age: 25,}",
@@ -17,34 +12,30 @@ const testCases = [
   "{ status: 'success', code: 200, }"
 ];
 
-async function run() {
-  console.log("=== BENCHMARK TEST ===\n");
+console.log("=== BENCHMARK TEST ===\n");
 
-  let successCount = 0;
-  let totalTime = 0;
+let successCount = 0;
+let totalTime = 0;
 
-  for (let i = 0; i < testCases.length; i++) {
-    const input = testCases[i];
+for (let i = 0; i < testCases.length; i++) {
+  const input = testCases[i];
 
-    const start = performance.now();
+  const start = performance.now();
 
-    try {
-      await guard.sanitize(input);
-      successCount++;
-    } catch (err) {
-      // ignore failure for benchmarking
-    }
+  const result = guard.sanitize(input);
 
-    const end = performance.now();
-    totalTime += (end - start);
+  const end = performance.now();
+
+  if (result.success) {
+    successCount++;
   }
 
-  const avgTime = (totalTime / testCases.length).toFixed(2);
-
-  console.log("Total Tests:", testCases.length);
-  console.log("Successful Repairs:", successCount);
-  console.log("Average Response Time:", avgTime, "ms");
-  console.log("\nBenchmark Complete ✔");
+  totalTime += (end - start);
 }
 
-run();
+const avgTime = (totalTime / testCases.length).toFixed(2);
+
+console.log("Total Tests:", testCases.length);
+console.log("Successful Repairs:", successCount);
+console.log("Average Execution Time:", avgTime, "ms");
+console.log("\nBenchmark Complete ✔");

@@ -1,11 +1,11 @@
 # 🛡️ LLM JSON Guard
 
-**Production-safe JSON repair and schema validation for unreliable LLM outputs.**
+**Deterministic JSON repair and schema validation for unreliable LLM outputs.**
 
-Large Language Models generate probabilistic text.
+Large Language Models generate probabilistic text.  
 Your backend requires deterministic structure.
 
-`llm-json-guard` repairs malformed JSON and enforces schema validation before AI output reaches production systems.
+`llm-json-guard` repairs malformed JSON and enforces schema validation before AI output reaches production systems — fully local, with no API calls.
 
 ---
 
@@ -13,11 +13,11 @@ Your backend requires deterministic structure.
 
 LLMs frequently return JSON that:
 
-* Contains trailing commas
-* Uses single quotes instead of double quotes
-* Omits required fields
-* Breaks object structure
-* Violates expected schema contracts
+- Contains trailing commas  
+- Uses single quotes instead of double quotes  
+- Omits required fields  
+- Breaks object structure  
+- Violates expected schema contracts  
 
 This leads to runtime failures:
 
@@ -35,12 +35,16 @@ Structured AI output cannot be trusted without validation.
 
 It:
 
-* Repairs malformed JSON
-* Validates against JSON Schema
-* Returns structured metadata
-* Provides repair confidence scoring
-* Fails safely with explicit error states
-* Prevents silent data corruption
+- Repairs malformed JSON deterministically
+- Validates against JSON Schema
+- Returns structured metadata
+- Provides repair confidence scoring
+- Fails safely with explicit error states
+- Prevents silent data corruption
+
+No external services.  
+No API keys.  
+No network dependency.
 
 ---
 
@@ -52,31 +56,23 @@ npm install llm-json-guard
 
 ---
 
-## Configuration
+## Requirements
 
-Create a `.env` file:
-
-```
-RAPIDAPI_KEY=your_rapidapi_key_here
-```
+- Node.js 18+
+- ESM environment (`"type": "module"`)
 
 ---
 
 ## Basic JSON Repair
 
 ```js
-import dotenv from "dotenv";
 import { LLMJsonGuard } from "llm-json-guard";
 
-dotenv.config();
-
-const guard = new LLMJsonGuard({
-  apiKey: process.env.RAPIDAPI_KEY
-});
+const guard = new LLMJsonGuard();
 
 const broken = "{name: 'John', age: 25,}";
 
-const result = await guard.sanitize(broken);
+const result = guard.sanitize(broken);
 
 console.log(result);
 ```
@@ -113,15 +109,23 @@ const schema = {
   required: ["name", "age"]
 };
 
-const result = await guard.guard("{name: 'John'}", schema);
+const result = guard.guard("{name: 'John'}", schema);
 
 console.log(result);
 ```
 
-If validation fails:
+If validation fails, the response will be structured:
 
-```
-Error: validation_failed
+```json
+{
+  "success": false,
+  "stage": "validation_failed",
+  "meta": {
+    "repaired": true,
+    "confidence": 0.92
+  },
+  "errors": [...]
+}
 ```
 
 No invalid data enters your system.
@@ -130,12 +134,12 @@ No invalid data enters your system.
 
 ## Response Structure
 
-All successful responses follow this structure:
+All responses follow this structure:
 
 ```json
 {
   "success": boolean,
-  "stage": "parsed_only | validated",
+  "stage": "parsed_only | validated | parse_failed | repair_suspicious | validation_failed",
   "meta": {
     "repaired": boolean,
     "confidence": number
@@ -147,8 +151,11 @@ All successful responses follow this structure:
 
 ### Stage Values
 
-* `parsed_only` — JSON repaired successfully
-* `validated` — JSON repaired and schema validated
+- `parsed_only` — JSON repaired successfully  
+- `validated` — JSON repaired and schema validated  
+- `parse_failed` — JSON could not be repaired  
+- `repair_suspicious` — Repair heavily modified input  
+- `validation_failed` — Schema validation failed  
 
 ---
 
@@ -156,6 +163,9 @@ All successful responses follow this structure:
 
 ```js
 import { performance } from "node:perf_hooks";
+import { LLMJsonGuard } from "llm-json-guard";
+
+const guard = new LLMJsonGuard();
 
 const inputs = [
   "{name: 'John', age: 25,}",
@@ -167,9 +177,7 @@ let totalTime = 0;
 
 for (const input of inputs) {
   const start = performance.now();
-  try {
-    await guard.sanitize(input);
-  } catch {}
+  const result = guard.sanitize(input);
   const end = performance.now();
   totalTime += (end - start);
 }
@@ -197,12 +205,12 @@ LLM → JSON.parse → Runtime Failure
 
 ## Use Cases
 
-* AI SaaS platforms
-* LLM-powered applications
-* Backend APIs consuming model output
-* Automation pipelines
-* RAG systems
-* Agent frameworks
+- AI SaaS platforms  
+- LLM-powered applications  
+- Backend APIs consuming model output  
+- Automation pipelines  
+- RAG systems  
+- Agent frameworks  
 
 ---
 
