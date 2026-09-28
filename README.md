@@ -1,6 +1,6 @@
 # 🛡️ LLM JSON Guard
 
-**Deterministic JSON repair and schema validation for unreliable LLM outputs.**
+**Deterministic JSON repair and schema validation for unreliable LLM outputs**
 
 Large Language Models generate probabilistic text.  
 Your backend requires deterministic structure.
